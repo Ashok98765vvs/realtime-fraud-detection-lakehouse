@@ -1,0 +1,42 @@
+# Pipeline configuration for the real-time fraud detection lakehouse
+# Secrets (connection strings, keys) should be injected via environment
+# variables or a secret manager — never committed to source control.
+
+kafka:
+  bootstrap_servers: "${KAFKA_BOOTSTRAP_SERVERS}"
+  topic: "transactions"
+  starting_offsets: "latest"
+
+azure:
+  event_hub_namespace: "${AZURE_EVENT_HUB_NAMESPACE}"
+  storage_account: "${AZURE_STORAGE_ACCOUNT}"
+  container: "lakehouse"
+
+delta_tables:
+  bronze_path: "/mnt/lakehouse/bronze/transactions"
+  silver_path: "/mnt/lakehouse/silver/transactions"
+  gold_path: "/mnt/lakehouse/gold/fraud_features"
+  quarantine_path: "/mnt/lakehouse/quarantine/transactions"
+  alerts_path: "/mnt/lakehouse/gold/fraud_alerts"
+
+checkpoints:
+  bronze: "/mnt/lakehouse/checkpoints/bronze"
+  silver: "/mnt/lakehouse/checkpoints/silver"
+  gold: "/mnt/lakehouse/checkpoints/gold"
+  alerts: "/mnt/lakehouse/checkpoints/alerts"
+
+data_quality:
+  null_rate_threshold: 0.01
+  required_columns:
+    - transaction_id
+    - account_id
+    - amount
+    - currency
+    - event_timestamp
+
+fraud_scoring:
+  high_velocity_threshold: 10
+  high_amount_stddev_threshold: 500
+  risk_alert_threshold: 0.7
+  aggregation_window: "5 minutes"
+  watermark_delay: "10 minutes"
